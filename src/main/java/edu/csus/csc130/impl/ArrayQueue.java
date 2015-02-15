@@ -3,6 +3,7 @@ package edu.csus.csc130.impl;
 import edu.csus.csc130.Queue;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Created by FirstName LastName
@@ -10,17 +11,31 @@ import java.util.Iterator;
  */
 public class ArrayQueue<E> implements Queue<E> {
 	
-	private int capacity;
-	private int size;
-	private Object[] data;
+	private Object[] q;
+	private int N = 0;
+	private int first = 0;
+	private int last = 0;
+	private int capacity = 0;
 	
     /**
      * Create a new Queue with initial array capacity
      */
     public ArrayQueue(final int capacity) {
     	this.capacity = capacity;
-    	this.data = new Object[capacity];
-    	this.size = 0;
+    	this.q = new Object[capacity];
+    }
+    
+    private void resize(final int max) {
+    	if (max < N) return;
+    	Object[] temp = new Object[max];
+    	for (int i = 0; i < N; i++) {
+    		temp[i] = q[(first + i) % q.length];
+    	}
+    	q = temp;
+    	first = 0;
+    	last = N;
+    	capacity = max;
+    	
     }
 
     /**
@@ -37,16 +52,12 @@ public class ArrayQueue<E> implements Queue<E> {
      */
     @Override
     public void enqueue(final E item) {
-    	data[size] = item;
-    	size++;
-    	if (size == capacity) {
-    		Object[] data2 = new Object[capacity * 2];
-    		capacity *= 2;
-    		for (int i = 0; i < size; i++) {
-    			data2[i] = data[i];
-    			data = data2;
-    		}
-    	}
+    	if (N == q.length)
+    		resize(2 * q.length);
+    	q[last++] = item;
+    	if (last == q.length)
+    		last = 0;
+    	N++;
     }
 
     /**
@@ -54,43 +65,33 @@ public class ArrayQueue<E> implements Queue<E> {
      * when array is 1/4 full, reduce the array size
      * to half
      */
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public E dequeue() {
-        @SuppressWarnings("unchecked")
-		final E obj = (E)data[0];
-        for (int i = 1; i < size; i++) {
-        	if (data[i] != null) {
-        		data[i - 1] = data[i];
-        	} else {
-        		data[i] = null;
-        	}
-        }
-        size--;
-        if (size > 0 && size < (capacity / 4)) {
-        	capacity /= 2;
-        	Object[] data2 = new Object[capacity];
-        	for (int i = 0; i < size; i++) {
-        		data2[i] = data[i];
-        		data = data2;
-        	}
-        }
-        return obj;
+    	Object obj = q[first];
+    	q[first] = null;
+    	N--;
+    	first++;
+    	if (first == q.length) first = 0;
+    	if (N > 0 && N == q.length / 4)
+    		resize(q.length / 2);
+    	return (E) obj;
     }
 
     @SuppressWarnings("unchecked")
 	@Override
     public E peek() {
-        return (data[0] != null) ? (E)data[0] : null;
+        return (E) q[first];
     }
 
     @Override
     public boolean isEmpty() {
-    	return (size > 0) ? false : true;
+    	return N == 0;
     }
 
     @Override
     public int size() {
-        return size;
+        return N;
     }
 
     /**
@@ -100,5 +101,9 @@ public class ArrayQueue<E> implements Queue<E> {
     @Override
     public Iterator<E> iterator() {
         return null;
+    }
+    
+    private class ArrayIterator implements Iterator<E> {
+    	
     }
 }
