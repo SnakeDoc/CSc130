@@ -100,10 +100,31 @@ public class ArrayQueue<E> implements Queue<E> {
      */
     @Override
     public Iterator<E> iterator() {
-        return null;
+        return new ArrayIterator();
     }
     
     private class ArrayIterator implements Iterator<E> {
+    	private int i = 0;
     	
+    	@Override
+    	public boolean hasNext() {
+    		return i < N;
+    	}
+    	
+    	@Override
+    	public void remove() {
+    		throw new UnsupportedOperationException();
+    	}
+    	
+    	@SuppressWarnings("unchecked")
+		@Override
+    	public E next() {
+    		if (!hasNext()) {
+    			throw new NoSuchElementException();
+    		}
+    		Object obj = q[(i + first) % q.length];
+    		i++;
+    		return (E) obj;
+    	}
     }
 }
